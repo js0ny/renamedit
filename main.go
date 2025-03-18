@@ -58,10 +58,25 @@ func main() {
 	// Open temporary file with editor
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
-		editor = "vim" // Default editor
+		editor = "vim"
 	}
 
-	cmd := exec.Command(editor, tmpFile.Name())
+	editorFlags := map[string]string{
+		"code":    "--wait",
+		"subl":    "--wait",
+		"zeditor": "--wait",
+		"atom":    "--wait",
+		"gedit":   "--standalone",
+	}
+
+	var cmd *exec.Cmd
+	if flag, exists := editorFlags[editor]; exists {
+		cmd = exec.Command(editor, flag, tmpFile.Name())
+	} else {
+		// Default case for vim, nano, emacs, etc. that wait by default
+		cmd = exec.Command(editor, tmpFile.Name())
+	}
+
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
