@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -10,13 +11,20 @@ import (
 )
 
 func main() {
+	// Add flag for ignoring extensions
+	ignoreExt := flag.Bool("ignore-ext", false, "Ignore file extensions when renaming")
+	flag.Parse()
+
 	// Check command line arguments
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: renamedit <directory path>")
+	args := flag.Args()
+	if len(args) != 1 {
+		fmt.Println("Usage: renamedit [options] <directory path>")
+		fmt.Println("Options:")
+		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
-	dirPath := os.Args[1]
+	dirPath := args[0]
 
 	// Check if directory exists
 	info, err := os.Stat(dirPath)
@@ -46,11 +54,30 @@ func main() {
 
 	// Write filenames to temporary file
 	fileNames := make([]string, 0)
+	fileExts := make([]string, 0)
+
 	for _, file := range files {
 		if !file.IsDir() {
 			fileName := file.Name()
 			fileNames = append(fileNames, fileName)
-			tmpFile.WriteString(fileName + "\n")
+
+			// If ignoring extensions, split filename and extension
+			if *ignoreExt {
+				baseName := fileName
+				ext := ""
+
+				// Get extension only if there is one
+				if dotIndex := strings.LastIndex(fileName, "."); dotIndex > 0 {
+					baseName = fileName[:dotIndex]
+					ext = fileName[dotIndex:]
+				}
+
+				fileExts = append(fileExts, ext)
+				tmpFile.WriteString(baseName + "\n")
+			} else {
+				tmpFile.WriteString(fileName + "\n")
+				fileExts = append(fileExts, "") // Empty placeholder
+			}
 		}
 	}
 	tmpFile.Close()
@@ -112,7 +139,12 @@ func main() {
 
 	// Perform renaming
 	for i, oldName := range fileNames {
+		// Re-add extension if we were ignoring it
 		newName := newFileNames[i]
+		if *ignoreExt {
+			newName = newName + fileExts[i]
+		}
+
 		if oldName != newName {
 			oldPath := filepath.Join(dirPath, oldName)
 			newPath := filepath.Join(dirPath, newName)
