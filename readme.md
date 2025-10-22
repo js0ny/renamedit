@@ -31,7 +31,8 @@ renamedit /path/to/directory
 
 Ignore file extensions (useful for batch renaming while preserving extensions):
 ```bash
-renamedit -ignore-ext /path/to/directory
+renamedit -i /path/to/directory
+renamedit --ignore-ext /path/to/directory
 ```
 
 ## How It Works

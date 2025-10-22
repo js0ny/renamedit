@@ -10,9 +10,15 @@ import (
 	"strings"
 )
 
+var ignoreExt bool
+
+func init() {
+	const ignoreExtDesc = "Ignore file extensions when renaming"
+	flag.BoolVar(&ignoreExt, "ignore-ext", false, ignoreExtDesc)
+	flag.BoolVar(&ignoreExt, "i", false, ignoreExtDesc+" (shorthand)")
+}
+
 func main() {
-	// Add flag for ignoring extensions
-	ignoreExt := flag.Bool("ignore-ext", false, "Ignore file extensions when renaming")
 	flag.Parse()
 
 	// Check command line arguments
@@ -62,7 +68,7 @@ func main() {
 			fileNames = append(fileNames, fileName)
 
 			// If ignoring extensions, split filename and extension
-			if *ignoreExt {
+			if ignoreExt {
 				baseName := fileName
 				ext := ""
 
@@ -141,7 +147,7 @@ func main() {
 	for i, oldName := range fileNames {
 		// Re-add extension if we were ignoring it
 		newName := newFileNames[i]
-		if *ignoreExt {
+		if ignoreExt {
 			newName = newName + fileExts[i]
 		}
 
